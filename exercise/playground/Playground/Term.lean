@@ -42,3 +42,34 @@ def subst : Term → Substitution → Term
         | x :: xs, sub => subst x sub :: (substList xs sub)
 
 #eval subst (Term.func "f" [Term.var "x", Term.var "y"]) exampleSub
+
+/- The operation compose, which composites two substitution-/
+def compose (σ θ : Substitution) : Substitution :=
+  fun x =>
+    match σ x with
+      | none => θ x
+      | some args => some (subst args θ)
+
+#eval subst (Term.func "f" [Term.var "x", Term.var "y"]) (compose exampleSub exampleSub)
+
+/- An operation mgu, that takes two terms t, u and returns their most general unifier:
+  a substitution σ, s.t. tσ = uσ and for any other θ with tθ = uθ,
+  there is a substitution ρ, s.t. θ = σρ-/
+
+-- using pattern matching to implement the Rule-Based Naive Standard Unification
+partial def mgu : List (Term × Term) → Option Substitution
+  | [] => some (fun _ => none)
+  | (s,t) :: rest =>
+      match s, t with
+        | Term.var x, Term.var y =>
+          if x == y then
+            none
+          else
+            sorry
+        | Term.var x, Term.func f args => sorry
+        | Term.func f args, Term.var y => sorry
+        | Term.func f xs, Term.func g ys =>
+            if f == g then -- TODO: termination_by??
+              mgu (List.zip xs ys ++ rest)
+            else
+              none
